@@ -2,8 +2,6 @@
 import pageView from "@/components/pageView.vue";
 </script>
 <template>
-  <pageView>
-    <div>111</div>
-  </pageView>
+  <page-view> </page-view>
 </template>
 <style lang="scss" scoped></style>

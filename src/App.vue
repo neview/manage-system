@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import pageHeader from "./views/menu/pageHeader.vue";
-import sideNav from "./views/menu/sideNav.vue";
+import pageHeader from "@/components/menu/pageHeader.vue";
+import sideNav from "@/components/menu/sideNav.vue";
 </script>
 
 <template>
@@ -15,9 +15,23 @@ import sideNav from "./views/menu/sideNav.vue";
       <el-main>
         <router-view></router-view>
       </el-main>
-      <el-footer>Footer</el-footer>
+      <el-footer>
+        <div class="footer_box">
+          <span>芒果电影票</span>
+          <span>Copyright 2020 芒果电影票</span>
+        </div>
+      </el-footer>
     </el-container>
   </el-container>
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.footer_box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 14px;
+}
+</style>

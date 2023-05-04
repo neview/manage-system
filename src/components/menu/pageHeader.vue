@@ -31,7 +31,7 @@
     justify-content: right;
     padding-right: 60px;
     .mx-1 {
-      margin-left: 20px;
+      margin-left: 10px;
     }
   }
 }
