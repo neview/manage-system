@@ -1,8 +1,7 @@
-<script setup lang="ts"></script>
 <template>
   <el-row class="row-bg" justify="space-between">
     <el-col :span="8"
-      ><div class="grid-content ep-bg-purple">仪表盘</div>
+      ><div class="grid-content ep-bg-purple">{{ title || "仪表盘" }}</div>
     </el-col>
     <el-col :span="8">
       <div class="user-text">
@@ -15,6 +14,18 @@
     </el-col>
   </el-row>
 </template>
+<script setup lang="ts">
+import { ref, onMounted } from "vue";
+import { onBeforeRouteUpdate, useRouter } from "vue-router";
+const title = ref();
+const route = useRouter();
+onBeforeRouteUpdate((to, from) => {
+  title.value = to.meta.title;
+});
+onMounted(() => {
+  title.value = route.currentRoute.value.meta.title;
+});
+</script>
 <style lang="scss" scoped>
 .row-bg {
   height: 70px;

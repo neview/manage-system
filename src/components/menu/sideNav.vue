@@ -8,39 +8,57 @@
     <el-text class="mx-1">管理后台</el-text>
   </div>
   <el-menu
-    default-active="2"
+    :default-active="defaultActive"
+    :default-openeds="defaultOpeneds"
     class="el-menu-vertical-demo"
     @open="handleOpen"
-    @close="handleClose"
+    @select="handleSelect"
     :unique-opened="true"
   >
-    <el-sub-menu index="1">
-      <template #title>
-        <el-icon><House /></el-icon>
-        <span>仪表盘</span>
-      </template>
-      <el-menu-item-group>
-        <el-menu-item index="1-1">仪表盘 one</el-menu-item>
-        <el-menu-item index="1-2">仪表盘 two</el-menu-item>
-      </el-menu-item-group>
-    </el-sub-menu>
-    <el-menu-item index="2">
-      <el-icon><icon-menu /></el-icon>
-      <span>用户信息</span>
-    </el-menu-item>
-    <el-menu-item index="3">
-      <el-icon><document /></el-icon>
-      <span>供应商信息</span>
-    </el-menu-item>
-    <el-menu-item index="4">
-      <el-icon><setting /></el-icon>
-      <span>订单列表</span>
-    </el-menu-item>
+    <div v-for="(item, index) in routerList[0].children" :key="index">
+      <el-menu-item
+        :index="index"
+        v-if="!item.children"
+        @click="jumpPath(item.path)"
+      >
+        <el-icon><component :is="item.meta ? item.meta.icon : ''" /></el-icon>
+        <span>{{ item.meta ? item.meta.title : "" }}</span>
+      </el-menu-item>
+      <el-sub-menu :index="index + 1" v-if="item.children">
+        <template #title>
+          <el-icon><component :is="item.meta ? item.meta.icon : ''" /></el-icon>
+          <span>{{ item.meta ? item.meta.title : "" }}</span>
+        </template>
+        <el-menu-item-group v-if="item.children && item.children.length > 0">
+          <el-menu-item
+            :index="index + '-' + index2"
+            v-for="(item2, index2) in item.children"
+            @click="jumpPath(item2.path)"
+            >{{ item2.meta ? item2.meta.title : "" }}</el-menu-item
+          >
+        </el-menu-item-group>
+      </el-sub-menu>
+    </div>
   </el-menu>
 </template>
 <script setup lang="ts">
-const handleOpen = () => {};
-const handleClose = () => {};
+import { ref, onMounted } from "vue";
+import router from "@/router/index";
+const defaultActive = ref(2);
+const defaultOpeneds = ref();
+const handleOpen = (index: any) => {
+  defaultActive.value = index;
+};
+const handleSelect = (index: any) => {
+  defaultOpeneds.value = [index];
+};
+const routerList = router.options.routes;
+const jumpPath = (path: string) => {
+  router.push(path);
+};
+onMounted(() => {
+  console.log("defaultOpeneds", defaultOpeneds.value);
+});
 </script>
 
 <style lang="scss" scoped>
