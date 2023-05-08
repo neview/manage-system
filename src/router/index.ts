@@ -45,6 +45,24 @@ const router = createRouter({
             },
           ]
         },
+        {
+          path: '/channel',
+          name: 'channelList',
+          meta: {
+            title: '渠道管理',
+            icon: 'Coin',
+          },
+          children: [
+            {
+              path: '/channel/channelList',
+              name: 'channelList',
+              component: () => import('@/views/channel/channelList.vue'),
+              meta: {
+                title: '渠道列表',
+              },
+            },
+          ]
+        },
       ]
     },
 

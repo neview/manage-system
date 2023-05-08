@@ -9,31 +9,29 @@
   </div>
   <el-menu
     :default-active="defaultActive"
-    :default-openeds="defaultOpeneds"
     class="el-menu-vertical-demo"
-    @open="handleOpen"
     @select="handleSelect"
     :unique-opened="true"
   >
     <div v-for="(item, index) in routerList[0].children" :key="index">
       <el-menu-item
-        :index="index"
+        :index="item.path"
         v-if="!item.children"
-        @click="jumpPath(item.path)"
+        @click="jumpPath(item.meta.title, item.path)"
       >
         <el-icon><component :is="item.meta ? item.meta.icon : ''" /></el-icon>
         <span>{{ item.meta ? item.meta.title : "" }}</span>
       </el-menu-item>
-      <el-sub-menu :index="index + 1" v-if="item.children">
+      <el-sub-menu :index="item.path" v-if="item.children">
         <template #title>
           <el-icon><component :is="item.meta ? item.meta.icon : ''" /></el-icon>
           <span>{{ item.meta ? item.meta.title : "" }}</span>
         </template>
         <el-menu-item-group v-if="item.children && item.children.length > 0">
           <el-menu-item
-            :index="index + '-' + index2"
-            v-for="(item2, index2) in item.children"
-            @click="jumpPath(item2.path)"
+            :index="item2.path"
+            v-for="item2 in item.children"
+            @click="jumpPath(item2.meta.title, item2.path)"
             >{{ item2.meta ? item2.meta.title : "" }}</el-menu-item
           >
         </el-menu-item-group>
@@ -42,22 +40,31 @@
   </el-menu>
 </template>
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, reactive, onMounted } from "vue";
 import router from "@/router/index";
-const defaultActive = ref(2);
-const defaultOpeneds = ref();
-const handleOpen = (index: any) => {
+import localCache from "../../utils/localStorage.js";
+import { totalPageTitle } from "@/stores/counter";
+const totalPage = totalPageTitle();
+// 默认展开的子菜单
+const defaultActive = ref("1");
+// 子菜单展开回调函数
+const handleSelect = (index: any) => {
+  localCache.set("menuIndex", index);
   defaultActive.value = index;
 };
-const handleSelect = (index: any) => {
-  defaultOpeneds.value = [index];
-};
+// 路由信息
 const routerList = router.options.routes;
-const jumpPath = (path: string) => {
+// 点击子菜单的回调函数
+const jumpPath = (title: any, path: any) => {
   router.push(path);
+  totalPage.storagePageTitle({
+    title: title,
+    path: path,
+  });
 };
+// 组件渲染后执行
 onMounted(() => {
-  console.log("defaultOpeneds", defaultOpeneds.value);
+  defaultActive.value = String(localCache.get("menuIndex")) || "1";
 });
 </script>
 
