@@ -4,17 +4,27 @@
       <!-- <div class="grid-content ep-bg-purple">{{ title || "仪表盘" }}</div> -->
       <!-- <el-scrollbar> -->
       <div class="grid-content ep-bg-purple">
-        <div class="page_view">
+        <div class="page_view" ref="tabScrollbarRef">
           <div
             class="page_tag"
-            :class="isPage === item.path ? 'active' : ''"
-            v-for="item in totalPage.pageTitle"
+            :class="isPage == item.path ? 'active' : ''"
+            v-for="(item, index) in totalPage.pageTitle"
             :key="item.path"
-            @click="selectPage(item)"
+            @click="selectPage(item, index)"
+            :ref="tabsRefs.set"
           >
             {{ item.title }}
+            <transition name="el-fade-in">
+              <el-icon
+                v-show="totalPage.pageTitle.length > 1"
+                @click.stop="closeTab(item)"
+                size="15"
+                name="el-icon-Close"
+                ><Close
+              /></el-icon>
+            </transition>
           </div>
-          <span class=""></span>
+          <div class="slider" ref="slider"></div>
         </div>
       </div>
       <!-- </el-scrollbar> -->
@@ -31,28 +41,77 @@
   </el-row>
 </template>
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, reactive, watch, nextTick } from "vue";
 import { onBeforeRouteUpdate, useRouter } from "vue-router";
 import { totalPageTitle } from "@/stores/counter";
+import { useTemplateRefsList } from "@vueuse/core";
 
 // const title = ref();
 const isPage = ref("");
-const route = useRouter();
+const router = useRouter();
 const totalPage = totalPageTitle();
+const tabsRefs = useTemplateRefsList();
+const tabScrollbarRef = ref();
+const slider = ref();
+const movePlace = reactive({
+  width: "",
+  transform: "",
+});
+// 监听 msg 变化
+watch(
+  () => totalPage,
+  (newVal, oldVal) => {
+    // 处理数据变化的逻辑
+    tabsRefs.value = [];
+  }
+);
+
 onBeforeRouteUpdate((to, from) => {
   // title.value = to.meta.title;
+  isPage.value = to.fullPath;
+  // tabsRefs.value = [];
+  totalPage.pageTitle.forEach((item, index) => {
+    if (to.fullPath === item.path) {
+      nextTick(() => {
+        console.log("tabsRefs.value", tabsRefs.value);
+      });
+      selectNavTab(tabsRefs.value[index]);
+    }
+  });
 });
 onMounted(() => {
   // title.value = route.currentRoute.value.meta.title;
   totalPage.storagePageTitle({
-    title: String(route.currentRoute.value.meta.title),
-    path: route.currentRoute.value.fullPath,
+    title: String(router.currentRoute.value.meta.title),
+    path: router.currentRoute.value.fullPath,
   });
-  isPage.value = route.currentRoute.value.fullPath;
+  isPage.value = router.currentRoute.value.fullPath;
+  setTimeout(() => {
+    selectNavTab(tabsRefs.value[0]);
+  }, 100);
 });
 // 选择菜单标题
-const selectPage = (val: object) => {
-  console.log("val", val);
+const selectPage = (val: any, index: any) => {
+  router.push(val.path);
+  isPage.value = val.path;
+};
+
+// 激活tab
+const selectNavTab = (dom: HTMLDivElement) => {
+  if (!dom) {
+    return false;
+  }
+  movePlace.width = dom.clientWidth + "px";
+  movePlace.transform = `translateX(${dom.offsetLeft - 20}px)`;
+  let scrollLeft =
+    dom.offsetLeft + dom.clientWidth - tabScrollbarRef.value.clientWidth;
+  slider.value.style.width = movePlace.width;
+  slider.value.style.transform = movePlace.transform;
+  // slider.value.scrollLeft = scrollLeft;
+};
+
+const closeTab = (val: any) => {
+  console.log("关闭router", val);
 };
 </script>
 <style lang="scss" scoped>
@@ -73,6 +132,7 @@ const selectPage = (val: object) => {
     overflow-x: auto;
     overflow-y: hidden;
     scrollbar-width: none;
+    position: relative;
     &::-webkit-scrollbar {
       height: 5px;
     }
@@ -101,6 +161,24 @@ const selectPage = (val: object) => {
         margin-right: 10px;
         border-radius: 6px;
         white-space: nowrap;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        z-index: 9999;
+        .el-icon-Close {
+          margin-left: 10px !important;
+        }
+      }
+      .slider {
+        height: 40px;
+        background-color: #fff;
+        box-shadow: 0px 0.3px 10px rgba(0, 0, 0, 0.035),
+          0px 2px 80px rgba(0, 0, 0, 0.07);
+        position: absolute;
+        transition: all 0.2s;
+        -webkit-transition: all 0.2s;
+        border-radius: 6px;
+        z-index: 99;
       }
     }
   }
@@ -116,8 +194,5 @@ const selectPage = (val: object) => {
   }
 }
 .active {
-  background-color: #fff;
-  box-shadow: 0px 0.3px 10px rgba(0, 0, 0, 0.035),
-    0px 2px 80px rgba(0, 0, 0, 0.07);
 }
 </style>

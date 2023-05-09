@@ -44,6 +44,7 @@ import { ref, reactive, onMounted } from "vue";
 import router from "@/router/index";
 import localCache from "../../utils/localStorage.js";
 import { totalPageTitle } from "@/stores/counter";
+import { onBeforeRouteUpdate } from "vue-router";
 const totalPage = totalPageTitle();
 // 默认展开的子菜单
 const defaultActive = ref("1");
@@ -57,6 +58,12 @@ const routerList = router.options.routes;
 // 点击子菜单的回调函数
 const jumpPath = (title: any, path: any) => {
   router.push(path);
+  let repeatVal = totalPage.pageTitle.some((item) => {
+    return item.path === path;
+  });
+  // 标题重复
+  if (repeatVal) return;
+  console.log("totalPage.pageTitle", totalPage.pageTitle);
   totalPage.storagePageTitle({
     title: title,
     path: path,
@@ -65,6 +72,9 @@ const jumpPath = (title: any, path: any) => {
 // 组件渲染后执行
 onMounted(() => {
   defaultActive.value = String(localCache.get("menuIndex")) || "1";
+});
+onBeforeRouteUpdate((to, from) => {
+  defaultActive.value = to.fullPath;
 });
 </script>
 
