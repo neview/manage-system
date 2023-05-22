@@ -34,5 +34,12 @@ export const totalPageTitle = defineStore('pageTitle', () => {
   function storagePageTitle(page: Page) {
     pageTitle.push(page)
   }
-  return { pageTitle, storagePageTitle }
+  function delectPageTitle(path: string) {
+    pageTitle.forEach((item, index) => {
+      if (item.path === path) {
+        pageTitle.splice(index, 1)
+      }
+    })
+  }
+  return { pageTitle, storagePageTitle, delectPageTitle }
 })

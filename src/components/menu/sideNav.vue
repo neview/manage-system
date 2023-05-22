@@ -63,7 +63,7 @@ const jumpPath = (title: any, path: any) => {
   });
   // 标题重复
   if (repeatVal) return;
-  console.log("totalPage.pageTitle", totalPage.pageTitle);
+  console.log("title", title);
   totalPage.storagePageTitle({
     title: title,
     path: path,

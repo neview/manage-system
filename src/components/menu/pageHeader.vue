@@ -7,18 +7,21 @@
         <div class="page_view" ref="tabScrollbarRef">
           <div
             class="page_tag"
-            :class="isPage == item.path ? 'active' : ''"
             v-for="(item, index) in totalPage.pageTitle"
             :key="item.path"
             @click="selectPage(item, index)"
             :ref="tabsRefs.set"
           >
             {{ item.title }}
-            <transition name="el-fade-in">
+            <transition
+              name="el-fade-in"
+              @after-leave="selectNavTab(tabsRefs.value[index])"
+            >
               <el-icon
                 v-show="totalPage.pageTitle.length > 1"
                 @click.stop="closeTab(item)"
                 size="15"
+                class="icon-close"
                 name="el-icon-Close"
                 ><Close
               /></el-icon>
@@ -46,49 +49,50 @@ import { onBeforeRouteUpdate, useRouter } from "vue-router";
 import { totalPageTitle } from "@/stores/counter";
 import { useTemplateRefsList } from "@vueuse/core";
 
-// const title = ref();
 const isPage = ref("");
 const router = useRouter();
 const totalPage = totalPageTitle();
 const tabsRefs = useTemplateRefsList();
 const tabScrollbarRef = ref();
 const slider = ref();
-const movePlace = reactive({
-  width: "",
-  transform: "",
-});
-// 监听 msg 变化
-watch(
-  () => totalPage,
-  (newVal, oldVal) => {
-    // 处理数据变化的逻辑
-    tabsRefs.value = [];
-  }
-);
+// // 监听 totalPage 变化
+// watch(
+//   () => totalPage,
+//   (newVal, oldVal) => {
+//     // 处理数据变化的逻辑
+//     tabsRefs.value = [];
+//   }
+// );
 
 onBeforeRouteUpdate((to, from) => {
-  // title.value = to.meta.title;
   isPage.value = to.fullPath;
-  // tabsRefs.value = [];
-  totalPage.pageTitle.forEach((item, index) => {
-    if (to.fullPath === item.path) {
-      nextTick(() => {
-        console.log("tabsRefs.value", tabsRefs.value);
-      });
-      selectNavTab(tabsRefs.value[index]);
-    }
+  // tabsRefs 去重
+  nextTick(() => {
+    let result = Object.values(
+      tabsRefs.value.reduce((acc, cur) => {
+        acc[cur.__vnode.key] = acc[cur.__vnode.key] || cur;
+        return acc;
+      }, {})
+    );
+    // console.log("tabsRefs.value", tabsRefs.value);
+    // let result = tabsRefs.value.splice("-" + totalPage.pageTitle.length);
+    // console.log("result", result);
+    totalPage.pageTitle.forEach((item, index) => {
+      if (to.fullPath === item.path) {
+        selectNavTab(result[index]);
+      }
+    });
   });
 });
 onMounted(() => {
-  // title.value = route.currentRoute.value.meta.title;
   totalPage.storagePageTitle({
     title: String(router.currentRoute.value.meta.title),
     path: router.currentRoute.value.fullPath,
   });
   isPage.value = router.currentRoute.value.fullPath;
-  setTimeout(() => {
+  nextTick(() => {
     selectNavTab(tabsRefs.value[0]);
-  }, 100);
+  });
 });
 // 选择菜单标题
 const selectPage = (val: any, index: any) => {
@@ -101,17 +105,32 @@ const selectNavTab = (dom: HTMLDivElement) => {
   if (!dom) {
     return false;
   }
-  movePlace.width = dom.clientWidth + "px";
-  movePlace.transform = `translateX(${dom.offsetLeft - 20}px)`;
+  console.log("dom.offsetLeft", dom.offsetLeft);
+  if (totalPage.pageTitle.length <= 1) {
+    setTimeout(() => {
+      slider.value.style.width = dom.clientWidth + "px";
+    }, 500);
+  }
+  slider.value.style.width = dom.clientWidth + "px";
+  slider.value.style.transform = `translateX(${dom.offsetLeft - 20}px)`;
   let scrollLeft =
     dom.offsetLeft + dom.clientWidth - tabScrollbarRef.value.clientWidth;
-  slider.value.style.width = movePlace.width;
-  slider.value.style.transform = movePlace.transform;
-  // slider.value.scrollLeft = scrollLeft;
+  if (dom.offsetLeft < tabScrollbarRef.value.scrollLeft) {
+    tabScrollbarRef.value.scrollTo(dom.offsetLeft, 0);
+  } else if (scrollLeft > tabScrollbarRef.value.scrollLeft) {
+    tabScrollbarRef.value.scrollTo(scrollLeft, 0);
+  }
 };
 
 const closeTab = (val: any) => {
-  console.log("关闭router", val);
+  totalPage.delectPageTitle(val.path);
+  let path = totalPage.pageTitle[totalPage.pageTitle.length - 1].path;
+  router.push(path);
+  if (val.path !== router.currentRoute.value.fullPath) {
+    nextTick(() => {
+      selectNavTab(tabsRefs.value[tabsRefs.value.length - 1]);
+    });
+  }
 };
 </script>
 <style lang="scss" scoped>
@@ -164,9 +183,9 @@ const closeTab = (val: any) => {
         cursor: pointer;
         display: flex;
         align-items: center;
-        z-index: 9999;
-        .el-icon-Close {
-          margin-left: 10px !important;
+        z-index: 999;
+        .icon-close {
+          margin-left: 5px;
         }
       }
       .slider {
